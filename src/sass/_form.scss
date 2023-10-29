@@ -61,6 +61,10 @@
   border-radius: 8px;
   overflow: hidden;
   background-color: rgba(246, 246, 246, 0.983);
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
   transition: box-shadow 0.3s;
 }
 
