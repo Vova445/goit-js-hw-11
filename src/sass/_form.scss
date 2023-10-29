@@ -17,32 +17,72 @@
   border: 1px solid #ccc;
   border-radius: 5px;
   overflow: hidden;
+}
 
-  input {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    outline: none;
-    font-size: 16px;
-    border-radius: 5px 0 0 5px;
-  }
+.search-form input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  border-radius: 5px 0 0 5px;
+  transition: all 0.3s;
+}
 
-  button {
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    border-radius: 0 5px 5px 0;
-  }
+.search-form button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  border-radius: 0 5px 5px 0;
+  transition: all 0.3s;
+}
+
+.search-form input:focus {
+  border: 1px solid #007bff;
+}
+
+.search-form button:hover {
+  background-color: #0056b3;
 }
 
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
-  max-width: 100%; 
+  max-width: 100%;
+  transition: all 0.3s;
+}
+
+.photo-card {
+  box-shadow: 0px 0px 5px 2px rgba(174, 174, 174, 0.5);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(246, 246, 246, 0.983);
+  transition: box-shadow 0.3s;
+}
+
+.photo-card:hover,
+.photo-card:focus {
+  box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.5);
+}
+
+.photo__link {
+  display: block;
+  height: 300px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.photo__link:hover {
+  transform: scale(1.05);
+}
+
+.photo-img {
+  object-fit: cover;
 }
 
 .load-more {
@@ -53,5 +93,10 @@
   outline: none;
   cursor: pointer;
   border-radius: 5px;
-  margin: 20px 0; 
+  margin: 20px 0;
+  transition: all 0.3s;
+}
+
+.load-more:hover {
+  background-color: #0056b3;
 }
