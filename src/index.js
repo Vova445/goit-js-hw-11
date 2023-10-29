@@ -1,5 +1,5 @@
 import Notiflix from 'notiflix';
-import { fetchData } from './api-service';
+import { fetchData } from './api.js';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
@@ -17,7 +17,7 @@ refs.loadMoreBtn.addEventListener('click', loadMoreResults);
 let currentPage = 1;
 let searchQuery = '';
 
-function clearGallery() {
+async function clearGallery() {
   refs.galleryContainer.innerHTML = '';
 }
 
@@ -50,7 +50,7 @@ function showEndOfResultsMessage() {
   );
 }
 
-function showImages(cards) {
+async function showImages(cards) {
   const markup = createMarkup(cards);
   refs.galleryContainer.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
@@ -64,7 +64,7 @@ function updateLoadMoreButton(cards, totalHits) {
   }
 }
 
-function scrollToNextPage() {
+async function scrollToNextPage() {
   const { height: cardHeight } = document
     .querySelector('.gallery')
     .lastElementChild.getBoundingClientRect();
