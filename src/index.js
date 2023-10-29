@@ -1,5 +1,5 @@
 import Notiflix from 'notiflix';
-import { fetchData } from './api-service';
+import { fetchData } from './api';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
@@ -17,70 +17,79 @@ refs.loadMoreBtn.addEventListener('click', loadMoreResults);
 let currentPage = 1;
 let searchQuery = '';
 
-async function onSubmit(evt) {
-  evt.preventDefault();
+async function clearGallery() {
   refs.galleryContainer.innerHTML = '';
-
-  searchQuery = evt.target.elements.searchQuery.value;
-  currentPage = 1; 
-  const data = await fetchData(searchQuery, currentPage);
-
-  if (!data.hits.length) {
-    Notiflix.Notify.failure(
-      `Sorry, there are no images matching your search query. Please try again.`
-    );
-
-    return;
-  }
-
-  const cards = data.hits;
-  const markup = createMarkup(cards);
-  refs.galleryContainer.insertAdjacentHTML('beforeend', markup);
-  lightbox.refresh();
-
-  if (cards.length < data.totalHits) {
-    refs.loadMoreBtn.classList.remove('is-hidden');
-  }
-  showTotalHitsMessage(data.total);
-
 }
 
-async function loadMoreResults() {
-  currentPage++;
+async function fetchAndDisplayData(query, page) {
+  try {
+    const data = await fetchData(query, page);
 
-  const data = await fetchData(searchQuery, currentPage);
-  const cards = data.hits;
-  console.log(cards);
-  console.log(searchQuery);
+    if (!data.hits.length) {
+      showErrorMessage();
+      return;
+    }
+
+    showImages(data.hits);
+    updateLoadMoreButton(data.hits, data.totalHits);
+    showTotalHitsMessage(data.total);
+  } catch (error) {
+    console.error('Error while fetching data:', error);
+  }
+}
+
+function showErrorMessage() {
+  Notiflix.Notify.failure(
+    `Sorry, there are no images matching your search query. Please try again.`
+  );
+}
+
+function showEndOfResultsMessage() {
+  Notiflix.Notify.info(
+    "We're sorry, but you've reached the end of search results."
+  );
+}
+
+async function showImages(cards) {
   const markup = createMarkup(cards);
   refs.galleryContainer.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
+}
 
-  console.log(currentPage * 40);
-  console.log(data.totalHits);
-  console.log(cards.length);
-  console.log(currentPage);
-
-  if (currentPage * 40 >= data.totalHits) {
-    Notiflix.Notify.info(
-      "We're sorry, but you've reached the end of search results."
-    );
-    refs.loadMoreBtn.classList.add('is-hidden'); 
+function updateLoadMoreButton(cards, totalHits) {
+  if (cards.length < totalHits) {
+    refs.loadMoreBtn.classList.remove('is-hidden');
+  } else {
+    refs.loadMoreBtn.classList.add('is-hidden');
   }
+}
 
+async function scrollToNextPage() {
   const { height: cardHeight } = document
     .querySelector('.gallery')
     .lastElementChild.getBoundingClientRect();
-
   window.scrollBy({
     top: cardHeight * 2,
     behavior: 'smooth',
   });
 }
 
+async function onSubmit(evt) {
+  evt.preventDefault();
+  clearGallery();
+  searchQuery = evt.target.elements.searchQuery.value;
+  currentPage = 1;
+  await fetchAndDisplayData(searchQuery, currentPage);
+}
+
+async function loadMoreResults() {
+  currentPage++;
+  await fetchAndDisplayData(searchQuery, currentPage);
+}
+
 function createMarkup(cards) {
   return cards
-    .map(card => {
+    .map((card) => {
       const {
         webformatURL,
         largeImageURL,
@@ -93,9 +102,9 @@ function createMarkup(cards) {
 
       return `
       <div class="photo-card">
-      <a class="photo__link" href="${largeImageURL}">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-      </a>
+        <a class="photo__link" href="${largeImageURL}">
+          <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+        </a>
         <div class="info">
           <p class="info-item">likes: <b>${likes}</b></p>
           <p class="info-item">views: <b>${views}</b></p>
@@ -112,7 +121,7 @@ function showTotalHitsMessage(total) {
   Notiflix.Notify.success(`Hooray! We found ${total} images.`);
 }
 
-let lightbox = new SimpleLightbox('.photo-card a', {
+const lightbox = new SimpleLightbox('.photo-card a', {
   captionPosition: 'bottom',
   captionsData: 'alt',
   captionDelay: 250,
