@@ -1,5 +1,5 @@
 import Notiflix from 'notiflix';
-import { fetchData } from './api.js';
+import { fetchData } from './api-service';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
@@ -17,79 +17,70 @@ refs.loadMoreBtn.addEventListener('click', loadMoreResults);
 let currentPage = 1;
 let searchQuery = '';
 
-async function clearGallery() {
+async function onSubmit(evt) {
+  evt.preventDefault();
   refs.galleryContainer.innerHTML = '';
-}
 
-async function fetchAndDisplayData(query, page) {
-  try {
-    const data = await fetchData(query, page);
+  searchQuery = evt.target.elements.searchQuery.value;
+  currentPage = 1; 
+  const data = await fetchData(searchQuery, currentPage);
 
-    if (!data.hits.length) {
-      showErrorMessage();
-      return;
-    }
+  if (!data.hits.length) {
+    Notiflix.Notify.failure(
+      `Sorry, there are no images matching your search query. Please try again.`
+    );
 
-    showImages(data.hits);
-    updateLoadMoreButton(data.hits, data.totalHits);
-    showTotalHitsMessage(data.total);
-  } catch (error) {
-    console.error('Error while fetching data:', error);
+    return;
   }
-}
 
-function showErrorMessage() {
-  Notiflix.Notify.failure(
-    `Sorry, there are no images matching your search query. Please try again.`
-  );
-}
-
-function showEndOfResultsMessage() {
-  Notiflix.Notify.info(
-    "We're sorry, but you've reached the end of search results."
-  );
-}
-
-async function showImages(cards) {
+  const cards = data.hits;
   const markup = createMarkup(cards);
   refs.galleryContainer.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
-}
 
-function updateLoadMoreButton(cards, totalHits) {
-  if (cards.length < totalHits) {
+  if (cards.length < data.totalHits) {
     refs.loadMoreBtn.classList.remove('is-hidden');
-  } else {
-    refs.loadMoreBtn.classList.add('is-hidden');
   }
+  showTotalHitsMessage(data.total);
+
 }
 
-async function scrollToNextPage() {
+async function loadMoreResults() {
+  currentPage++;
+
+  const data = await fetchData(searchQuery, currentPage);
+  const cards = data.hits;
+  console.log(cards);
+  console.log(searchQuery);
+  const markup = createMarkup(cards);
+  refs.galleryContainer.insertAdjacentHTML('beforeend', markup);
+  lightbox.refresh();
+
+  console.log(currentPage * 40);
+  console.log(data.totalHits);
+  console.log(cards.length);
+  console.log(currentPage);
+
+  if (currentPage * 40 >= data.totalHits) {
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+    refs.loadMoreBtn.classList.add('is-hidden'); 
+  }
+
   const { height: cardHeight } = document
     .querySelector('.gallery')
     .lastElementChild.getBoundingClientRect();
+
   window.scrollBy({
     top: cardHeight * 2,
     behavior: 'smooth',
   });
 }
 
-async function onSubmit(evt) {
-  evt.preventDefault();
-  clearGallery();
-  searchQuery = evt.target.elements.searchQuery.value;
-  currentPage = 1;
-  await fetchAndDisplayData(searchQuery, currentPage);
-}
-
-async function loadMoreResults() {
-  currentPage++;
-  await fetchAndDisplayData(searchQuery, currentPage);
-}
-
 function createMarkup(cards) {
   return cards
-    .map((card) => {
+    .map(card => {
       const {
         webformatURL,
         largeImageURL,
@@ -102,9 +93,9 @@ function createMarkup(cards) {
 
       return `
       <div class="photo-card">
-        <a class="photo__link" href="${largeImageURL}">
-          <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-        </a>
+      <a class="photo__link" href="${largeImageURL}">
+        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+      </a>
         <div class="info">
           <p class="info-item">likes: <b>${likes}</b></p>
           <p class="info-item">views: <b>${views}</b></p>
@@ -121,7 +112,7 @@ function showTotalHitsMessage(total) {
   Notiflix.Notify.success(`Hooray! We found ${total} images.`);
 }
 
-const lightbox = new SimpleLightbox('.photo-card a', {
+let lightbox = new SimpleLightbox('.photo-card a', {
   captionPosition: 'bottom',
   captionsData: 'alt',
   captionDelay: 250,
